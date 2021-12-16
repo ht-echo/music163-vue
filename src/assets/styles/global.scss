@@ -1,0 +1,47 @@
+@media screen and (max-width: 768px) {
+  .page-container {
+    width: 100%;
+  }
+}
+@media screen and (min-width: 768px) {
+  .page-container {
+    width: 1200px;
+    min-width: 1000px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+.app-header-contaner {
+  padding: 0;
+}
+$banner-height: 280px;
+$desc-text-color: #999;
+$main-text-color: #333;
+%line-one {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+%line-two {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229, 0, 119, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 30px rgba(229, 0, 119, 0%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 0, 119, 0%);
+  }
+}
+.color-desc {
+  color: $desc-text-color;
+}
+.color-main {
+  color: $main-text-color;
+}
