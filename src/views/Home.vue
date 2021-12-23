@@ -6,7 +6,7 @@
           <el-image
             style="height: 100%"
             v-if="item.imageUrl"
-            :src="item.imageUrl"
+            :src="item.imageUrl + `?param=700y280`"
             :title="item.typeTitle"
             alt=""
           >
@@ -47,13 +47,19 @@
         <div class="page-container song-content">
           <div class="song-left">
             <div class="song-left-container">
-              <div class="left-img-box" v-for="(item, index) in []" :key="index">
-                <img v-if="item.url" :src="item.url" />
+              <div class="left-img-box" v-for="(item, index) in topSongData" :key="index">
+                <el-image
+                  lazy
+                  style="height: 100%; width: 100%"
+                  v-if="item.picUrl"
+                  :src="item.picUrl + `?param=204y211`"
+                />
               </div>
             </div>
           </div>
           <div class="song-right">
             <Card
+              lazy
               :dataList="topSongData"
               :num="8"
               itemWidth="50%"
@@ -66,10 +72,10 @@
       </div>
     </div>
     <div class="page-container">
-      <Card :dataList="topAlbumData" :num="10" title="新碟上架" itemPadding="26px" />
+      <Card lazy :dataList="topAlbumData" :num="10" title="新碟上架" itemPadding="26px" imgWidth="190" />
     </div>
     <div class="rank-container">
-      <div class="card-title page-container">
+      <div class="card-title page-container title">
         <div class="left">排行榜</div>
         <div class="right">
           <span>更多</span>
@@ -81,19 +87,21 @@
           <div class="rank-left">
             <div class="left-container">
               <el-carousel
-                style="width: 100%"
+                style="width: 428px"
                 :autoplay="false"
                 arrow="always"
                 :interval="4000"
                 type="card"
                 height="200px"
                 indicator-position="none"
+                @change="carouselChange"
               >
-                <el-carousel-item v-for="(item, index) in toplist" :key="index">
+                <el-carousel-item v-for="(item, index) in topList.slice(0, 5)" :key="index">
                   <el-image
-                    style="height: 100%; width: 100%"
+                    fit="fill"
+                    style="width: 214px; height: 214px"
                     v-if="item.coverImgUrl"
-                    :src="item.coverImgUrl"
+                    :src="item.coverImgUrl + `?param=214y214`"
                     :title="item.name"
                     alt=""
                   >
@@ -101,12 +109,13 @@
                   </el-image>
                 </el-carousel-item>
               </el-carousel>
-              <div class="color-main">3333</div>
-              <div class="color-desc">3333</div>
+              <div class="color-main">{{ topList[currentIndex].name }}</div>
+              <div class="color-desc">{{ topList[currentIndex].updateFrequency }}</div>
               <div>3333</div>
             </div>
           </div>
           <Card
+            lazy
             class="rank-right"
             :dataList="rankData"
             :num="5"
@@ -123,7 +132,7 @@
 
 <script>
 import { globalConfig } from '@/utils/global';
-import { banner, personalized, topAlbum, topSong, playlistDetail, toplist } from '@/utils/request';
+import { banner, personalized, topAlbum, topSong, toplist, playlistDetail } from '@/utils/request';
 import Card from '@/components/Card.vue';
 export default {
   name: 'Home',
@@ -132,23 +141,27 @@ export default {
   },
   data() {
     return {
+      currentIndex: 0,
       banner_height: globalConfig.banner_height,
       bannerList: [{}, {}, {}],
       personalizedData: [],
       topAlbumData: [],
       rankData: [],
       topSongData: [],
-      toplist: [{}, {}, {}],
+      topList: [{}, {}, {}],
     };
   },
   created() {
-    // this.getBannerData();
-    // this.getPersonalizedData();
-    // this.getTopAlbumData();
-    // this.getTopSong();
-    // this.getRankData();
+    this.getBannerData();
+    this.getPersonalizedData();
+    this.getTopAlbumData();
+    this.getTopSong();
+    this.getRankData();
   },
   methods: {
+    carouselChange(index) {
+      this.currentIndex = index;
+    },
     async getBannerData() {
       const data = await banner();
       if (data.code == 200) {
@@ -168,20 +181,23 @@ export default {
       }
     },
     async getTopSong() {
-      const dataTop = await toplist();
-      if (dataTop.code == 200) {
-        this.toplist = dataTop.list;
-      }
-
-      const data = await topSong({ type: 0, limit: 8 });
+      const data = await topSong({ type: 0 });
       if (data.code == 200) {
-        this.topSongData = data.data.map((item) => item.album);
+        this.topSongData = data.data.slice(0, 8).map((item) => {
+          return { ...item.album, ...{ duration: item.duration } };
+        });
       }
     },
     async getRankData() {
+      const dataTop = await toplist();
+      if (dataTop.code == 200) {
+        this.topList = dataTop.list;
+      }
       const data = await playlistDetail({ id: 19723756 });
       if (data.code == 200) {
-        this.rankData = data.playlist.tracks.map((item) => item.al);
+        this.rankData = data.playlist.tracks.map((item) => {
+          return { ...item.al, ...{ artists: item.ar, duration: item.dt } };
+        });
       }
     },
   },
@@ -201,6 +217,10 @@ export default {
 .el-carousel__item:nth-child(2n + 1) {
   background-color: #d3dce6;
 }
+.color-main {
+  font-size: 18px;
+  font-weight: bold;
+}
 .title {
   display: flex;
   justify-content: space-between;
@@ -208,6 +228,8 @@ export default {
   padding: 26px 0 30px;
   .left {
     color: $main-text-color;
+    font-weight: bold;
+    font-size: 24px;
   }
   .right {
     color: $desc-text-color;
@@ -318,6 +340,9 @@ export default {
         top: -58px;
         box-sizing: border-box;
         background-color: #333;
+        display: flex;
+        flex-wrap: wrap;
+        overflow: hidden;
         &::before {
           content: '';
           width: 100%;
@@ -327,11 +352,11 @@ export default {
           position: absolute;
           top: 0;
           left: 0;
+          z-index: 2000;
         }
         .left-img-box {
-          flex: 1;
           width: 50%;
-          flex-wrap: wrap;
+          height: 33.33%;
         }
       }
       .song-right {
@@ -352,6 +377,8 @@ export default {
     padding: 26px 0 30px;
     .left {
       color: $main-text-color;
+      font-weight: bold;
+      font-size: 24px;
     }
     .right {
       color: $desc-text-color;
@@ -369,7 +396,7 @@ export default {
     padding: 70px 20px 50px 0;
     .left-container {
       width: 75%;
-      height: 100%;
+      height: 90%;
       display: flex;
       flex-direction: column;
       align-items: center;

@@ -11,7 +11,7 @@
       <div
         :style="{ width: itemWidth, 'justify-content': justify }"
         class="card-content"
-        v-for="(item, index) in songList.slice(0, num)"
+        v-for="(item, index) in songList"
         :key="index"
       >
         <el-card shadow="never" style="margin-bottom: 20px; width: 100%" :body-style="bodyStyle">
@@ -21,22 +21,26 @@
               :style="{ padding: `0 ${itemPadding}`, margin: `0 -${textMode == 'row' ? itemPadding : '0'}` }"
             >
               <div class="play-left">
-                <div class="image-box" :style="{ width: imgWidth + 'px', height: imgWidth + 'px' }">
+                <div class="image-box" :style="{ width: imgWidthNew, height: imgWidthNew }">
                   <div class="top-num" v-if="item.playCount && textMode == 'vertical'">
-                    <el-image style="width: 14px;height:14px" :src="require('@/assets/images/playCount.png')" />
+                    <el-image
+                      style="width: 14px; height: 14px"
+                      :src="require('@/assets/images/playCount.png')"
+                    />
                     <span>{{ getPlayCount(item.playCount) }}</span>
                   </div>
 
                   <el-image
-                    :style="{ width: '100%', height: '100%' }"
+                    fit="fill"
+                    :style="{ width: imgWidthNew, height: imgWidthNew }"
                     :lazy="lazy"
                     :title="item.name"
                     class="card-img"
-                    :src="item.picUrl + `?param=250y250`"
+                    :src="item.picUrl + `?param=${imgWidth}y${imgWidth}`"
                   >
                     <div slot="error" class="image-slot">
                       <el-image
-                        :style="{ width: imgWidth + 'px', height: imgWidth + 'px' }"
+                        :style="{ width: imgWidthNew, height: imgWidthNew }"
                         class="card-img error-img"
                         fit="cover"
                         :src="require('@/assets/images/error.png')"
@@ -46,20 +50,19 @@
                   <el-image class="hover-play" fit="cover" :src="require('@/assets/images/btn-play.png')" />
                 </div>
                 <div v-if="textMode == 'row'" class="card-text left-text" :title="item.name">
-                  <div>333</div>
-                  <div class="card-text desc-color">444</div>
+                  <div>{{ item.name }}</div>
+                  <div class="card-text desc-color">
+                    {{ item.artists && item.artists.map((item) => item.name).join('/') }}
+                  </div>
                 </div>
               </div>
-              <div
-                :width="imgWidth"
-                v-if="textMode == 'vertical'"
-                class="card-text bottom-text"
-                :title="item.name"
-              >
-                {{ item.name }}
+              <div v-if="textMode == 'vertical'" class="bottom-text" :title="item.name">
+                <div class="card-text" :style="{ width: imgWidthNew }">{{ item.name }}</div>
               </div>
             </div>
-            <div v-if="textMode == 'row'" class="card-text desc-color" :title="item.name">44444</div>
+            <div v-if="textMode == 'row'" class="card-text desc-color" :title="item.name">
+              {{ getDurtion(item.duration) }}
+            </div>
           </div>
         </el-card>
       </div>
@@ -71,8 +74,11 @@
 import { getPlayCount } from '@/utils/tools';
 export default {
   props: {
-    num: Number,
     title: String,
+    num: {
+      type: Number,
+      default: 0,
+    },
     lazy: {
       type: Boolean,
       default: false,
@@ -91,7 +97,7 @@ export default {
     },
     imgWidth: {
       type: String,
-      default: '100%',
+      default: '160',
     },
     textMode: {
       type: String,
@@ -119,12 +125,28 @@ export default {
         const temp = Array(this.num).fill({});
         return temp;
       }
-      return this.dataList;
+      return this.dataList.slice(0, this.num);
+    },
+    imgWidthNew() {
+      return this.imgWidth + 'px';
     },
   },
-  mounted() {},
+  mounted() {
+    console.log(`songList`, this.songList)
+  },
   methods: {
     getPlayCount,
+    getDurtion(duration) {
+      if (!duration) {
+        return '00:00';
+      }
+      let minute = parseInt(duration / 1000 / 60);
+      let second = parseInt((duration / 1000) % 60);
+      minute = minute < 10 ? '0' + minute : minute;
+      second = second < 10 ? '0' + second : second;
+
+      return minute + ':' + second;
+    },
   },
 };
 </script>
@@ -134,8 +156,9 @@ export default {
   border: none;
   background-color: transparent;
 }
-.desc-color{
-  padding-right: 40px;
+.desc-color {
+  margin-right: 40px;
+  color: #999;
 }
 .card {
   .card-title {
@@ -143,6 +166,11 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 26px 0 30px;
+    .left {
+      color: $main-text-color;
+      font-weight: bold;
+      font-size: 24px;
+    }
   }
   .content-contaner {
     display: flex;
@@ -160,8 +188,13 @@ export default {
         display: block;
       }
     }
+    .play-left-container {
+      box-sizing: border-box;
+    }
     .image-box {
       position: relative;
+      background: #efefef;
+      border-radius: 8px;
       .top-num {
         position: absolute;
         top: 5px;
@@ -207,9 +240,11 @@ export default {
       .left-text {
         margin-left: 20px;
       }
-      .bottom-text {
-        padding: 10px 0 10px;
-      }
+    }
+    .bottom-text {
+      padding: 10px 0 10px;
+      display: flex;
+      justify-content: center;
     }
   }
   .card-info-flex {

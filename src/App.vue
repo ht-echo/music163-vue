@@ -34,6 +34,7 @@ body {
 #app {
   flex: 1;
   display: flex;
-  user-select: none;
+  // user-select: none;
+  overflow: auto;
 }
 </style>
